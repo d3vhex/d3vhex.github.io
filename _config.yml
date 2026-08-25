@@ -1,0 +1,21 @@
+title: Oğuz
+description: Platform engineering, DevSecOps, and things I broke on purpose.
+url: "https://d3vhex.github.io"
+theme: minima
+
+author:
+  name: Oğuz
+
+github_username: d3vhex
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-feed
+
+permalink: /:year/:month/:day/:title/
+
+minima:
+  skin: dark
+  social_links:
+    - platform: github
+      user_url: "https://github.com/d3vhex"
