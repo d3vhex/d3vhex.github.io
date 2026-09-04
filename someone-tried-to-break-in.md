@@ -34,7 +34,7 @@ The model running locally is a design decision rather than a preference. Piping 
 
 The Alerts tab shows **25 alerts** in the 24 hour window: 2 CRITICAL, 8 HIGH, 15 MEDIUM.
 
-![Sentora Security Alerts screen showing AUTH_FAILURE and KEYWORD ACCESS alerts sourced from /var/log/auth.log, with severity and source IP columns](images/01-security-alerts.png)
+![Sentora Security Alerts screen showing AUTH_FAILURE and KEYWORD ACCESS alerts sourced from /var/log/auth.log, with severity and source IP columns](/pictures/alerts.png)
 *The alert list. Source IP and attempted username are already parsed out of each line.*
 
 Flattened into a table, the raw events look like this:
@@ -130,7 +130,7 @@ Combined with Sigma, that is 42 techniques covered.
 
 The AI Analysis tab produced 20 insights: 1 critical, 4 advisories, and **0 automatic actions**.
 
-![Sentora AI Analysis tab showing 20 total insights, 0 auto-actions, 1 critical and 4 advisory counters above the insight cards](images/02-ai-analysis-overview.png)
+![Sentora AI Analysis tab showing 20 total insights, 0 auto-actions, 1 critical and 4 advisory counters above the insight cards](/pictures/ai.png)
 *The AI Analysis overview. The banner at the top counts the events the model could not answer on instead of hiding them.*
 
 That banner deserves a moment:
@@ -141,7 +141,7 @@ Most tools will not show you this. When the model produces nonsense they either 
 
 Now the events themselves:
 
-![Sentora AI defensive insights for 217.30.164.95, showing brute-force and unknown-IP findings with MONITOR verdicts, 80% confidence, and ISOLATE_HOST recommendations](images/03-ai-defensive-insights.png)
+![Sentora AI defensive insights for 217.30.164.95, showing brute-force and unknown-IP findings with MONITOR verdicts, 80% confidence, and ISOLATE_HOST recommendations](/pictures/ai_analys.png)
 *Output from the defensive worker. The attacker IP has been extracted into the TARGET field automatically.*
 
 | Time | Source | Verdict | Severity | Conf | Recommended action | Summary |
@@ -169,7 +169,7 @@ So the gate now requires severity CRITICAL or HIGH plus a criterion that was che
 
 Then the address was cut off.
 
-![Sentora SOAR Execution History with two BLOCK_IP entries targeting 217.30.164.95, in completed and success states](images/04-soar-block-ip.png)
+![Sentora SOAR Execution History with two BLOCK_IP entries targeting 217.30.164.95, in completed and success states](/pictures/soar.png)
 *SOAR execution history. Epoch `1788441785` is 2026-09-03 13:23:05 UTC, `1788441800` is 13:23:20 UTC.*
 
 What runs on the agent (`Sentora/modules/soar/soar.py`):
