@@ -257,3 +257,4 @@ Open issues, send PRs, break it. If you can get past the detection layers I woul
 ---
 
 *Every screenshot here comes from a live deployment. The source addresses are unmasked because this was scan traffic aimed at a publicly reachable server.*
+*Sentora is AGPL-3.0: [github.com/d3vhex/Sentora](https://github.com/d3vhex/Sentora). If you're running it, everything above is fixed on `main`, but go pull. If you want to break something, the agent listener is the interesting surface, and I'd much rather hear about it from you than from an incident.*
