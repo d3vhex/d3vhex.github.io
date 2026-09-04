@@ -19,7 +19,7 @@ It is not a product pitch. The screenshots are from a live box, the timestamps a
 
 | Component | Value |
 | :--- | :--- |
-| Host | `ip-172-31-42-49` (AWS EC2, Linux) |
+| Host | `ip-*****` (AWS, Linux) |
 | Agent | Sentora agent, connected over the TCP ingest channel |
 | Monitored source | `/var/log/auth.log` |
 | Detection layers | `conf/rules.yaml` patterns, on-endpoint Sigma, correlation engine |
@@ -153,6 +153,8 @@ Now the events themselves:
 
 The model read the situation correctly. It extracted the target (`217.30.164.95`), named the root attempts as brute force, and flagged the `oracle` login as coming from an address outside the expected range for that account.
 
+Every one of those rows is a recommendation. Section 7 covers what happened to them.
+
 ### Why confidence is not a threshold
 
 Whether an insight reaches an analyst is decided in `ai/gating.py`, and it asks exactly one question: does the log contain the evidence?
@@ -194,9 +196,11 @@ How the server reaches the agent is its own decision: it does not. The agent ope
 
 ---
 
-## 7. The honest part: why zero auto-actions?
+## 7. The honest part: what the model recommended, and what actually ran
 
-The screen says **0 AUTO-ACTIONS**. The detection was automatic. I pulled the trigger on the block myself.
+Look at the recommended action column in section 5 again. Every defensive insight the model produced about this attack asked for `ISOLATE_HOST`.
+
+Not one of them ran.
 
 The reason is this condition in `ai_worker.py`:
 
@@ -209,11 +213,13 @@ should_act = (
 )
 ```
 
-The verdict was `MONITOR`, not `ACT`. Confidence was 80%, the recommended action was on the safe list, and the target was valid, but none of that gets evaluated because the first clause already failed. The row was filed as `AI_DEFENSIVE_MONITOR` and I dispatched `BLOCK_IP` from the SOAR Hub.
+The verdict was `MONITOR`, not `ACT`. Confidence was 80%, the recommended action was on the safe list, and the target was valid, but none of that gets evaluated because the first clause already failed. The rows were filed as `AI_DEFENSIVE_MONITOR` and the recommendation stayed a recommendation. That is what the **0 AUTO-ACTIONS** counter is reporting: the number of times the model's own autonomous path pulled a trigger, which was zero.
 
-Is that a failure? There is a measurable cost. The last detection landed at 12:22 and the block went in at 13:23. For roughly an hour the source was free to keep trying. Autonomous dispatch would have made that seconds.
+The response that did run is the one in section 6. `BLOCK_IP` against `217.30.164.95`, source dropped, host up and reachable the whole time.
 
-The opposite reading is also true though. The recommended action was `ISOLATE_HOST` at 80% confidence. Had that fired on its own, it would have pulled **my own EC2 instance** off the network. The model identified the right event and then proposed a response out of proportion to it. The answer to an SSH brute force is blocking the source, not quarantining the host.
+The distance between those two is the entire point of this section. The model found the right event, named the technique correctly, extracted the right target, and then proposed a response out of proportion to it. `ISOLATE_HOST` here would have taken a working production host out of service over an attack that never got past the login prompt: doing to myself what the attacker could not manage. The answer to an SSH brute force is cutting off the source, not quarantining the machine that held.
+
+So the interesting number on that screen is not what the AI did. It is what it wanted to do and did not get.
 
 This is what shadow mode is for. Set `AI_SHADOW_MODE=1` and the defensive worker stops firing real actions. Anything it would have dispatched gets written into SOAR Hub > Shadow Queue as a proposal with `shadow_status = pending`, and an operator approves or rejects it. Proposals never expire and nothing decides for you. Turning on autonomy before watching what the model actually says yes to on production traffic means shipping an untested control against your own infrastructure.
 
@@ -227,7 +233,7 @@ To switch autonomy off entirely, set `AI_AUTO_ACT_CONF=1.0` in `.env`.
 
 **The most valuable screen in an EDR is the one admitting what it does not know.** That "2 events the model could not answer on" banner is the most honest thing in the product.
 
-**Autonomous response gets measured in shadow mode first.** The model wanted `ISOLATE_HOST`. Autonomy enabled on blind faith would have taken a server offline in a way the attacker never managed.
+**Autonomous response gets measured in shadow mode first.** The model asked for `ISOLATE_HOST` four times and the gate is the only reason it never got it. Autonomy switched on out of blind faith would have taken a production host out of service in a way the attacker never managed.
 
 **An EDR does not replace hardening.** This box should already have had:
 
@@ -256,5 +262,4 @@ Open issues, send PRs, break it. If you can get past the detection layers I woul
 
 ---
 
-*Every screenshot here comes from a live deployment. The source addresses are unmasked because this was scan traffic aimed at a publicly reachable server.*
-*Sentora is AGPL-3.0: [github.com/d3vhex/Sentora](https://github.com/d3vhex/Sentora). If you're running it, everything above is fixed on `main`, but go pull. If you want to break something, the agent listener is the interesting surface, and I'd much rather hear about it from you than from an incident.*
+*Every screenshot here comes from a live deployment. The attacker addresses are unmasked because this was scan traffic aimed at a publicly reachable server. Sentora is AGPL-3.0: [github.com/d3vhex/Sentora](https://github.com/d3vhex/Sentora). Everything described above is on `main`, so pull before you file anything. If you want to break something, the agent listener is the interesting surface, and I would much rather hear about it from you than from an incident.*
